@@ -1,0 +1,26 @@
+{
+  "name": "igme430-reminder-webapp",
+  "version": "1.0.0",
+  "description": "Project 1 for IGME 430 Rich Media II",
+  "main": "index.js",
+  "scripts": {
+    "start": "node ./src/server.js",
+    "pretest": "eslint ./src --fix",
+    "test": "echo \"Tests complete\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/IrvinTehDo/IGME430-Reminder-WebApp.git"
+  },
+  "author": "Irvin Do",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/IrvinTehDo/IGME430-Reminder-WebApp/issues"
+  },
+  "homepage": "https://github.com/IrvinTehDo/IGME430-Reminder-WebApp#readme",
+  "devDependencies": {
+    "eslint": "^4.18.1",
+    "eslint-config-airbnb": "^16.1.0",
+    "eslint-plugin-import": "^2.8.0"
+  }
+}
