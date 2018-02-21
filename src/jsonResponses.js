@@ -11,10 +11,58 @@ const respondJSONMeta = (request, response, status) => {
   response.end();
 };
 
-const getReminders = (request, response) => {
-  const responseJSON = {
-    reminders,
+const getReminders = (request, response, parsedUrl) => {
+  const splitUrl = parsedUrl.pathname.split('/')[1].split('&field=');
+  console.dir(splitUrl);
+
+  const params = {
+    searchBy: splitUrl[0],
+    field: splitUrl[1],
   };
+  let responseJSON = {};
+
+  if (params.searchBy === 'getAllReminders') {
+    responseJSON = {
+      reminders,
+    };
+  } else {
+    const keys = Object.keys(reminders);
+    const tempReminders = {};
+
+    if (params.searchBy === 'getByTag') {
+      for (let i = 0; i < keys.length; i++) {
+        console.dir(keys[i]); // gets the name of the object
+
+        if (reminders[keys[i]].tag === params.field) {
+          tempReminders[keys[i]] = {};
+          tempReminders[keys[i]].name = reminders[keys[i]].name;
+          tempReminders[keys[i]].description = reminders[keys[i]].description;
+          tempReminders[keys[i]].tag = reminders[keys[i]].tag;
+        }
+      }
+
+      responseJSON = {
+        tempReminders,
+      };
+    } else if (params.searchBy === 'getByName') {
+      for (let i = 0; i < keys.length; i++) {
+        console.dir(keys[i]);
+
+        if (reminders[keys[i]].name === params.field) {
+          tempReminders[keys[i]] = {};
+          tempReminders[keys[i]].name = reminders[keys[i]].name;
+          tempReminders[keys[i]].description = reminders[keys[i]].description;
+          tempReminders[keys[i]].tag = reminders[keys[i]].tag;
+        }
+      }
+
+      responseJSON = {
+        tempReminders,
+      };
+    }
+  }
+
+  console.dir(responseJSON);
   respondJSON(request, response, 200, responseJSON);
 };
 

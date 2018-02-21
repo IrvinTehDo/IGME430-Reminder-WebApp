@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Our simple HTTP server</title>
+  <title>Schedule Me!</title>
   <link rel="stylesheet" type="text/css" href="/style.css">
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
@@ -20,6 +20,13 @@
         if(obj.reminders){
             const reminderList = document.createElement('p');
             const reminders = JSON.stringify(obj.reminders);
+            reminderList.textContent = reminders;
+            content.appendChild(reminderList);
+        }
+        
+        if(obj.tempReminders){
+            const reminderList = document.createElement('p');
+            const reminders = JSON.stringify(obj.tempReminders);
             reminderList.textContent = reminders;
             content.appendChild(reminderList);
         }
@@ -85,10 +92,13 @@
 
     const sendGet = (e, getReminderForm) => {
         const userMethod = getReminderForm.getAttribute('method');       
-        const urlField = getReminderForm.querySelector('#reminderType');   
+        const urlField = getReminderForm.querySelector('#reminderType');  
+        
+        const searchField = getReminderForm.querySelector('#searchField');
+        
         const xhr = new XMLHttpRequest();
         
-        xhr.open("GET" , urlField.value);
+        xhr.open("GET" , `${urlField.value}&field=${searchField.value}`);
         
         xhr.setRequestHeader('Accept', 'application/json');
         
@@ -153,7 +163,10 @@
     <form id="getRemindersForm" action="/getReminder" method="get">
         <select id='reminderType'>
             <option value='/getAllReminders'>All Reminders</option>
+            <option value='/getByTag'>Tag</option>
+            <option value='/getByName'>Name</option>
         </select>
+        <input id="searchField" type="text" name="search"/>
         <input type="submit" value="Get Reminders"/>
     </form>
       
