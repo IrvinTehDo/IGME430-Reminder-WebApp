@@ -19,12 +19,11 @@ const getReminders = (request, response) => {
 };
 
 const checkReminders = (request, response, searchObj) => {
-    
-    if(reminders[searchObj].name === searchObj){
-        return respondJSONMeta(request, response, 200);
-    }
-    
-    respondJSONMeta(request, response, 404);
+  if (reminders[searchObj].name === searchObj) {
+    return respondJSONMeta(request, response, 200);
+  }
+
+  return respondJSONMeta(request, response, 404);
 };
 
 const getRemindersMeta = (request, response) => respondJSONMeta(request, response, 200);
@@ -57,7 +56,7 @@ const addReminder = (request, response, body) => {
   }
   reminders[body.name].name = body.name;
   reminders[body.name].description = body.description;
-    reminders[body.name].tag = body.tag;
+  reminders[body.name].tag = body.tag;
 
   if (responseCode === 201) {
     responseJSON.message = 'Created Successfully';
@@ -70,7 +69,7 @@ const addReminder = (request, response, body) => {
 module.exports = {
   getReminders,
   addReminder,
-    checkReminders,
+  checkReminders,
   notFound,
   getRemindersMeta,
   notFoundMeta,

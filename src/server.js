@@ -47,14 +47,13 @@ const handleGet = (request, response, parsedUrl) => {
 };
 
 const handleHead = (request, response, parsedUrl) => {
-    
-    let searchObj = parsedUrl.pathname.split('/')[1];
-    console.log(searchObj);
-    
-    jsonHandler.checkReminders(request, response, searchObj);
+  const searchObj = parsedUrl.pathname.split('/')[1];
+  console.log(searchObj);
+
+  jsonHandler.checkReminders(request, response, searchObj);
 };
 
-//First place data goes when it's sent from client and recieved by server
+// First place data goes when it's sent from client and recieved by server
 const onRequest = (request, response) => {
   const parsedUrl = url.parse(request.url);
   console.dir(request.method);
