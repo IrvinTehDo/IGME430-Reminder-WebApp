@@ -1,4 +1,4 @@
-const users = {};
+const reminders = {};
 
 const respondJSON = (request, response, status, object) => {
   response.writeHead(status, { 'Content-Type': 'application/json' });
@@ -11,14 +11,23 @@ const respondJSONMeta = (request, response, status) => {
   response.end();
 };
 
-const getUsers = (request, response) => {
+const getReminders = (request, response) => {
   const responseJSON = {
-    users,
+    reminders,
   };
   respondJSON(request, response, 200, responseJSON);
 };
 
-const getUsersMeta = (request, response) => respondJSONMeta(request, response, 200);
+const checkReminders = (request, response, searchObj) => {
+    
+    if(reminders[searchObj].name === searchObj){
+        return respondJSONMeta(request, response, 200);
+    }
+    
+    respondJSONMeta(request, response, 404);
+};
+
+const getRemindersMeta = (request, response) => respondJSONMeta(request, response, 200);
 
 const notFoundMeta = (request, response) => respondJSONMeta(request, response, 404);
 
@@ -31,23 +40,24 @@ const notFound = (request, response) => {
   return respondJSON(request, response, 404, responseJSON);
 };
 
-const addUser = (request, response, body) => {
+const addReminder = (request, response, body) => {
   const responseJSON = {
-    message: 'Name and age are both required.',
+    message: 'Name, Description, and Tag are all required.',
   };
-  if (!body.name || !body.age) {
+  if (!body.name || !body.description || !body.tag) {
     responseJSON.id = 'missingParams';
     return respondJSON(request, response, 400, responseJSON);
   }
   let responseCode = 201;
 
-  if (users[body.name]) {
+  if (reminders[body.name]) {
     responseCode = 204;
   } else {
-    users[body.name] = {};
+    reminders[body.name] = {};
   }
-  users[body.name].name = body.name;
-  users[body.name].age = body.age;
+  reminders[body.name].name = body.name;
+  reminders[body.name].description = body.description;
+    reminders[body.name].tag = body.tag;
 
   if (responseCode === 201) {
     responseJSON.message = 'Created Successfully';
@@ -58,9 +68,10 @@ const addUser = (request, response, body) => {
 
 // public exports
 module.exports = {
-  getUsers,
-  addUser,
+  getReminders,
+  addReminder,
+    checkReminders,
   notFound,
-  getUsersMeta,
+  getRemindersMeta,
   notFoundMeta,
 };

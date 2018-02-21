@@ -17,11 +17,11 @@
             content.appendChild(p);
         }
         
-        if(obj.users){
-            const userList = document.createElement('p');
-            const users = JSON.stringify(obj.users);
-            userList.textContent = users;
-            content.appendChild(userList);
+        if(obj.reminders){
+            const reminderList = document.createElement('p');
+            const reminders = JSON.stringify(obj.reminders);
+            reminderList.textContent = reminders;
+            content.appendChild(reminderList);
         }
     };
 
@@ -58,22 +58,23 @@
         }
     };
 
-    const sendPost = (e, nameForm) => {
-        const nameAction = nameForm.getAttribute('action');
-        const nameMethod = nameForm.getAttribute('method');
+    const sendPost = (e, reminderForm) => {
+        const reminderAction = reminderForm.getAttribute('action');
+        const reminderMethod = reminderForm.getAttribute('method');
         
-        const nameField = nameForm.querySelector('#nameField');
-        const ageField = nameForm.querySelector('#ageField');
+        const nameField = reminderForm.querySelector('#nameField');
+        const descriptionField = reminderForm.querySelector('#descriptionField');
+        const tagField = reminderForm.querySelector('#tagField');
         
         const xhr = new XMLHttpRequest();
-        xhr.open(nameMethod, nameAction);
+        xhr.open(reminderMethod, reminderAction);
         
         xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
         xhr.setRequestHeader('Accept', 'application/json');
         
         xhr.onload = () => handleResponse(xhr, true);
         
-        const formData = `name=${nameField.value}&age=${ageField.value}`;
+        const formData = `name=${nameField.value}&description=${descriptionField.value}&tag=${tagField.value}`;
         
         xhr.send(formData);
         
@@ -82,24 +83,17 @@
         return false;
     };
 
-    const sendGetOrHead = (e, userForm) => {
-        //const userAction = userForm.getAttribute('action');
-        const userMethod = userForm.getAttribute('method');
-        
-        const urlField = userForm.querySelector('#urlField');
-        const methodSelect = userForm.querySelector('#methodSelect');
-        
+    const sendGet = (e, getReminderForm) => {
+        const userMethod = getReminderForm.getAttribute('method');       
+        const urlField = getReminderForm.querySelector('#reminderType');   
         const xhr = new XMLHttpRequest();
-        xhr.open(methodSelect.value , urlField.value);
+        
+        xhr.open("GET" , urlField.value);
         
         xhr.setRequestHeader('Accept', 'application/json');
         
-        if(methodSelect.value === 'get'){
-            xhr.onload = () => handleResponse(xhr, true);
-        }
-        else{
-            xhr.onload = () => handleResponse(xhr, false);
-        }
+        //True means we're looking for get
+        xhr.onload = () => handleResponse(xhr, true);
 
         xhr.send();
         
@@ -108,14 +102,35 @@
         return false;
     };
 
-    const init = () => {
-        const nameForm = document.querySelector('#nameForm'); 
-        const addUser = (e) => sendPost(e, nameForm); 
-        nameForm.addEventListener('submit', addUser);
+    const sendHead = (e, getExistForm) => {
+        const userMethod = getExistForm.getAttribute('method');
+        const urlField = getExistForm.querySelector('#nameField');
+        const xhr = new XMLHttpRequest();
+        console.dir(urlField.value);
+        xhr.open("HEAD", urlField.value);
         
-        const userForm = document.querySelector('#userForm');
-        const getUser = (e) => sendGetOrHead(e, userForm);
-        userForm.addEventListener('submit', getUser);
+        xhr.setRequestHeader('Accept', 'application/json');
+        
+        //false for head
+        xhr.onload = () => handleResponse(xhr, false);
+        
+        xhr.send();
+        e.preventDefault();
+        return false;
+    }
+
+    const init = () => {
+        const reminderForm = document.querySelector('#submitReminderForm'); 
+        const addReminder = (e) => sendPost(e, reminderForm); 
+        reminderForm.addEventListener('submit', addReminder);
+
+        const getForm = document.querySelector('#getRemindersForm');
+        const getReminders = (e) => sendGet(e, getForm);
+        getForm.addEventListener('submit', getReminders);
+        
+        const checkForm = document.querySelector('#checkReminderExists');
+        const checkReminder = (e) => sendHead(e, checkForm);
+        checkForm.addEventListener('submit', checkReminder);
     };
     
     window.onload = init;
@@ -123,25 +138,31 @@
 </head>
 <body>
   <section id="top">
-    <h3>POST Status Code Tests</h3>
-    <form id="nameForm" action="/addUser" method="post">
-      <label for="name">Name: </label>
+    <h3>Remind Me!</h3>
+      
+    <form id="submitReminderForm" action="/submitReminder" method="post">
+      <label for="name">Reminder Name: </label>
       <input id="nameField" type="text" name="name" />
-      <label for="age">Age: </label>
-      <input id="ageField" type="number" name="age" min="0" max="100" step="1"/>
-      <input type="submit" value="Add User" />
+      <label for="description">Description: </label>
+      <input id="descriptionField" type="text" name="description" />
+        <label for="tag">Tag: </label>
+        <input id="tagField" type="text" name="tag"/>
+      <input type="submit" value="Add Reminder" />
     </form>
-    <form id="userForm" action="/getUsers" method="get">
-      <select id='urlField'>
-        <option value='/getUsers'>/getUsers</option>
-        <option value='/notReal'>/notReal</option>
-      </select>
-      <select id="methodSelect">
-        <option value="get">GET</option>
-        <option value="head">HEAD</option>
-      </select>
-      <input type="submit" value="Get User" />
+      
+    <form id="getRemindersForm" action="/getReminder" method="get">
+        <select id='reminderType'>
+            <option value='/getAllReminders'>All Reminders</option>
+        </select>
+        <input type="submit" value="Get Reminders"/>
     </form>
+      
+    <form id="checkReminderExists" action="/checkReminder" method="head">
+        <label for="name">Reminder Name:</label>
+        <input id="nameField" type="text" name="name"/>
+        <input type="submit" value="Check if Reminder Exists"/>
+    </form>
+
   </section>
   <section id="content">
   </section>
