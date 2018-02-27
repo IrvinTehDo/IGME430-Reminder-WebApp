@@ -1,4 +1,34 @@
+const mysql = require('mysql');
+const config = require('../.credentials.json');
+
+const mysqlConnection = mysql.createConnection({
+  host: config.mysqlHost,
+  user: config.mysqlUser,
+  password: config.mysqlPass,
+});
+
+mysqlConnection.connect((err) => {
+  if (err) throw err;
+  console.log('Connected to mysql database');
+
+  mysqlConnection.query(`CREATE DATABASE IF NOT EXISTS ${config.mysqlSchema}`, (e, result) => {
+    if (e) throw e;
+    console.log(result);
+  });
+
+  mysqlConnection.query(`USE ${config.mysqlSchema};`, (e, result) => {
+    if (e) throw e;
+    console.log(result);
+  });
+
+  mysqlConnection.query('CREATE TABLE IF NOT EXISTS reminders (ID int NOT NULL AUTO_INCREMENT, name varchar(255), description varchar(255), time varchar(255), date varchar(255), PRIMARY KEY (ID));', (e, result) => {
+    if (e) throw e;
+    console.log(result);
+  });
+});
+
 const reminders = {};
+
 
 const respondJSON = (request, response, status, object) => {
   response.writeHead(status, { 'Content-Type': 'application/json' });
