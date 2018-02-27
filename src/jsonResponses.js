@@ -38,6 +38,7 @@ const getReminders = (request, response, parsedUrl) => {
           tempReminders[keys[i]].name = reminders[keys[i]].name;
           tempReminders[keys[i]].description = reminders[keys[i]].description;
           tempReminders[keys[i]].tag = reminders[keys[i]].tag;
+          tempReminders[keys[i]].date = reminders[keys[i]].date;
         }
       }
 
@@ -52,7 +53,7 @@ const getReminders = (request, response, parsedUrl) => {
           tempReminders[keys[i]] = {};
           tempReminders[keys[i]].name = reminders[keys[i]].name;
           tempReminders[keys[i]].description = reminders[keys[i]].description;
-          tempReminders[keys[i]].tag = reminders[keys[i]].tag;
+          tempReminders[keys[i]].date = reminders[keys[i]].date;
         }
       }
 
@@ -89,9 +90,9 @@ const notFound = (request, response) => {
 
 const addReminder = (request, response, body) => {
   const responseJSON = {
-    message: 'Name, Description, and Tag are all required.',
+    message: 'Name, Description, Tag, and Date are all required.',
   };
-  if (!body.name || !body.description || !body.tag) {
+  if (!body.name || !body.description || !body.tag || !body.date) {
     responseJSON.id = 'missingParams';
     return respondJSON(request, response, 400, responseJSON);
   }
@@ -105,6 +106,7 @@ const addReminder = (request, response, body) => {
   reminders[body.name].name = body.name;
   reminders[body.name].description = body.description;
   reminders[body.name].tag = body.tag;
+  reminders[body.name].date = body.date;
 
   if (responseCode === 201) {
     responseJSON.message = 'Created Successfully';

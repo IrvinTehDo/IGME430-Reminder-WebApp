@@ -6,58 +6,113 @@
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
   <script type="text/babel">
-    const parseJSON = (xhr, content) => {
+    
+    const makeNotificationBox = (obj, content) => {
+        console.log('Makng a notification box');
+        console.dir(obj);
         
+        const item = document.createElement('div');
+        const name = document.createElement('h4');
+        name.textContent = `Name: ${obj.name}`;
+        const tag = document.createElement('p');
+        tag.textContent = `Tag: ${obj.tag}`;
+        const description = document.createElement('p');
+        description.textContent = `Description: ${obj.description}`;
+        const date = document.createElement('p');
+        
+        let countFrom = new Date(obj.date).getTime();
+        
+        let countdown = setInterval(() => {
+            var curTime = new Date().getTime();
+            var length = countFrom - curTime;
+            
+            var d = Math.floor(length/(1000*60*60*24));
+            var h = Math.floor((length %(1000*60*60*24))/ (1000*60*60));
+            var m = Math.floor((length %(1000*60*60)) / (1000 * 60));
+            var s = Math.floor((length % (1000*60))/ 1000);
+            
+            date.textContent = `${d} Days ${h} Hours ${m} Min ${s} Sec`;
+            
+            if(length < 0){
+                clearInterval(countdown);
+                date.textContent = "EXPIRED";
+            }
+            
+        }, 1000)
+
+        //date.textContent = `${obj.date}`;
+        
+        item.appendChild(name);
+        item.appendChild(tag);
+        item.appendChild(description);
+        item.appendChild(date);
+        content.appendChild(item);
+    };
+
+    const parseJSON = (xhr, status) => {
+        const content = document.querySelector('#content');
         const obj = JSON.parse(xhr.response);
         console.dir(obj);
         
         if(obj.message){
             const p = document.createElement('p');
             p.textContent = `Message: ${obj.message}`;
-            content.appendChild(p);
+            status.appendChild(p);
         }
-        
+        //When user requested "all reminders"
         if(obj.reminders){
-            const reminderList = document.createElement('p');
-            const reminders = JSON.stringify(obj.reminders);
-            reminderList.textContent = reminders;
-            content.appendChild(reminderList);
+            content.innerHTML = "";
+            const keys = Object.keys(obj.reminders);
+            
+            Object.entries(obj.reminders).forEach(
+                ([key, value]) => {
+                    //console.dir(value);
+                    makeNotificationBox(value, content);
+                    
+                });
+
         }
-        
+        //Temp Reminders is what the user searched for that's not "all reminders"
         if(obj.tempReminders){
-            const reminderList = document.createElement('p');
-            const reminders = JSON.stringify(obj.tempReminders);
-            reminderList.textContent = reminders;
-            content.appendChild(reminderList);
+            content.innerHTML = "";
+            const keys = Object.keys(obj.tempReminders);
+            
+            Object.entries(obj.tempReminders).forEach(
+                ([key, value]) => makeNotificationBox(value, content)
+            );
         }
     };
 
     const handleResponse = (xhr, parseResponse) => {
-        const content = document.querySelector('#content');
+        //const content = document.querySelector('#content');
+        const status = document.querySelector('#status');
         
         switch(xhr.status){
             case 200:
-                content.innerHTML = `<b>Success</b>`;
+                //content.innerHTML = `<b>Success</b>`;
+                status.innerHTML = `<b>Success</b>`
                 break;
             case 201: 
-                content.innerHTML = `<b>Create</b>`;
+                //content.innerHTML = `<b>Create</b>`;
+                status.innerHTML = `<b>Create</b>`;
                 break;
             case 204: 
-                content.innerHTML = `<b>Updated (No Content)</b>`;
+                //content.innerHTML = `<b>Updated (No Content)</b>`;
+                status.innerHTML = `<b>Updated (No Content)</b>`;
                 break;
             case 400: 
-                content.innerHTML = `<b>Bad Request</b>`
+                status.innerHTML = `<b>Bad Request</b>`
                 break;
             case 404:
-                content.innerHTML = `<b>Resource Not Found</b>`;
+                status.innerHTML = `<b>Resource Not Found</b>`;
                 break;
             default:
-                content.innerHTML = 'Error code not implemented by client';
+                status.innerHTML = 'Error code not implemented by client';
                 break;
         }
         
         if(xhr.status != 204 && parseResponse){
-            parseJSON(xhr, content);
+            parseJSON(xhr, status);
         }
         
         else{
@@ -72,6 +127,7 @@
         const nameField = reminderForm.querySelector('#nameField');
         const descriptionField = reminderForm.querySelector('#descriptionField');
         const tagField = reminderForm.querySelector('#tagField');
+        const dateField = reminderForm.querySelector('#dateField');
         
         const xhr = new XMLHttpRequest();
         xhr.open(reminderMethod, reminderAction);
@@ -81,7 +137,7 @@
         
         xhr.onload = () => handleResponse(xhr, true);
         
-        const formData = `name=${nameField.value}&description=${descriptionField.value}&tag=${tagField.value}`;
+        const formData = `name=${nameField.value}&description=${descriptionField.value}&tag=${tagField.value}&date=${dateField.value}`;
         
         xhr.send(formData);
         
@@ -148,6 +204,7 @@
 </head>
 <body>
   <section id="top">
+      <div id="statusContainer"><h2 id="status"></h2></div>
     <h3>Remind Me!</h3>
       
     <form id="submitReminderForm" action="/submitReminder" method="post">
@@ -157,6 +214,8 @@
       <input id="descriptionField" type="text" name="description" />
         <label for="tag">Tag: </label>
         <input id="tagField" type="text" name="tag"/>
+        <label for="date">Date: </label>
+        <input id="dateField" type="datetime-local" name="date"/>
       <input type="submit" value="Add Reminder" />
     </form>
       
