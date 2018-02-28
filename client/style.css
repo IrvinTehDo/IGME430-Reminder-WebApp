@@ -1,8 +1,13 @@
+@import url('https://fonts.googleapis.com/css?family=Droid+Sans');
+@import url('https://fonts.googleapis.com/css?family=Poiret+One');
+@improt url('https://fonts.googleapis.com/css?family=Patua+One');
+
 html, body {
   height: 100%;
   width: 100%;
   margin: 0;
   padding: 0;
+    background-color: #EEE;
 }
 
 #top {
@@ -11,7 +16,9 @@ html, body {
 }
 
 #top h1 {
-  font-size: 2em;
+    font-family:"Droid Sans";
+  font-size: 5em;
+  color: #404040;
 }
 
 #content {
@@ -38,5 +45,17 @@ html, body {
     padding: 3% 5% 5% 5%;
     border-style: solid;
     border-width: thin;
+    background-color: #f7f7f7;
+    
+}
 
+.reminder p{
+    font-family: "Poiret One";
+    font-size: 26px;
+}
+
+.reminder h4{
+    font-family: "Patua One";
+    font-size: 45px;
+    color: #404040;
 }

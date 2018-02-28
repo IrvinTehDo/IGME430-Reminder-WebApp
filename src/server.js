@@ -8,7 +8,6 @@ const jsonHandler = require('./jsonResponses.js');
 const port = process.env.PORT || process.env.NODE_PORT || 3000;
 
 // handle POST
-
 const handlePost = (request, response, parsedUrl) => {
   if (parsedUrl.pathname === '/submitReminder') {
     const res = response;
@@ -34,6 +33,7 @@ const handlePost = (request, response, parsedUrl) => {
   }
 };
 
+// Handles Get requests
 const handleGet = async (request, response, parsedUrl) => {
   if (parsedUrl.pathname === '/style.css') {
     htmlHandler.getCSS(request, response);
@@ -46,9 +46,9 @@ const handleGet = async (request, response, parsedUrl) => {
   }
 };
 
+// Handles Head requests
 const handleHead = (request, response, parsedUrl) => {
   const searchObj = parsedUrl.pathname.split('/')[1];
-  console.log(searchObj);
 
   jsonHandler.checkReminders(request, response, searchObj);
 };
@@ -56,8 +56,6 @@ const handleHead = (request, response, parsedUrl) => {
 // First place data goes when it's sent from client and recieved by server
 const onRequest = (request, response) => {
   const parsedUrl = url.parse(request.url);
-  console.dir(request.method);
-  console.dir(request.url);
 
   if (request.method === 'POST') {
     handlePost(request, response, parsedUrl);

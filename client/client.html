@@ -7,10 +7,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
   <script type="text/babel">
     
+//Create a reminder notification box which will appear in a grid-shaped pattern below the forms using the obj we get from the jsonResponse..
     const makeNotificationBox = (obj, content) => {
-        console.log('Makng a notification box');
-        console.dir(obj);
         
+        //Create our document elements and give them text and style.
         const item = document.createElement('div');
         item.className = 'reminder';
         const name = document.createElement('h4');
@@ -21,6 +21,7 @@
         description.textContent = `Description: ${obj.description}`;
         const date = document.createElement('p');
         
+        //Where we start counting from
         let countFrom = new Date(obj.date).getTime();
         
         //Countdown code (especially calculations) from W3Schools https://www.w3schools.com/howto/howto_js_countdown.asp
@@ -42,33 +43,34 @@
             
         }, 1000)
 
-        //date.textContent = `${obj.date}`;
-        
+        //Append elements to parent div, in this case item
         item.appendChild(name);
         item.appendChild(tag);
         item.appendChild(description);
         item.appendChild(date);
+        //Append div to grid
         content.appendChild(item);
     };
 
+// Parse our data we recieved from the server. 
     const parseJSON = (xhr, status) => {
         const content = document.querySelector('#content');
         const obj = JSON.parse(xhr.response);
-        console.dir(obj);
         
+        //  If there is a message from the server, throw the status up top of the page.
         if(obj.message){
             const p = document.createElement('p');
             p.textContent = `${obj.message}`;
             status.appendChild(p);
         }
-        //When user requested "all reminders"
+        
+        //If there are reminders, make a reminder box for each one.
         if(obj.reminders){
             content.innerHTML = "";
             const keys = Object.keys(obj.reminders);
             
             Object.entries(obj.reminders).forEach(
                 ([key, value]) => {
-                    //console.dir(value);
                     makeNotificationBox(value, content);
                     
                 });
@@ -76,18 +78,15 @@
         }
     };
 
+//Handle response codes, first place the response comes to after coming back from server.
     const handleResponse = (xhr, parseResponse) => {
-        //const content = document.querySelector('#content');
         const status = document.querySelector('#status');
         
         switch(xhr.status){
             case 200:
-                //content.innerHTML = `<b>Success</b>`;
-                //status.innerHTML = `<b>Success</b>`
                 status.style.background = 'green';
                 break;
             case 201: 
-                //status.innerHTML = `<b>Reminder Created</b>`;
                 status.style.background = 'green';
                 break;
             case 204: 
@@ -100,26 +99,24 @@
                 break;
             case 400: 
                 status.style.background = 'red';
-                status.innerHTML = `<b>Bad Request</b>`
+                status.innerHTML = `<b>Uh oh, something went wrong!</b>`
                 break;
             case 404:
                 status.style.background = 'red';
-                status.innerHTML = `<b>Resource Not Found</b>`;
+                status.innerHTML = `<b>Reminder Not Found</b>`;
                 break;
             default:
                 status.innerHTML = 'Error code not implemented by client';
                 break;
         }
         
+        //If there is JSON to parse, send it to another function. 204s dont need parsing cause it's just an update, no content is recieved.
         if(xhr.status != 204 && parseResponse){
             parseJSON(xhr, status);
         }
-        
-        else{
-            console.log('received')
-        }
     };
 
+//Send a POST, in this case, our form for creating or updating a reminder.
     const sendPost = (e, reminderForm) => {
         const reminderAction = reminderForm.getAttribute('action');
         const reminderMethod = reminderForm.getAttribute('method');
@@ -146,6 +143,7 @@
         return false;
     };
 
+//Sends a GET request based on parameters.
     const sendGet = (e, getReminderForm) => {
         const userMethod = getReminderForm.getAttribute('method');       
         const urlField = getReminderForm.querySelector('#reminderType');  
@@ -168,11 +166,12 @@
         return false;
     };
 
+//Sends a HEAD request, in this case, the most practical use for this is to check if a reminder exists.
     const sendHead = (e, getExistForm) => {
         const userMethod = getExistForm.getAttribute('method');
         const urlField = getExistForm.querySelector('#nameField');
         const xhr = new XMLHttpRequest();
-        console.dir(urlField.value);
+        // console.dir(urlField.value);
         xhr.open("HEAD", urlField.value);
         
         xhr.setRequestHeader('Accept', 'application/json');
