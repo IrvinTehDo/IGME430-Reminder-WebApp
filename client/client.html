@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Schedule Me!</title>
+  <title>Remind Me!</title>
   <link rel="stylesheet" type="text/css" href="/style.css">
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
@@ -12,6 +12,7 @@
         console.dir(obj);
         
         const item = document.createElement('div');
+        item.className = 'reminder';
         const name = document.createElement('h4');
         name.textContent = `Name: ${obj.name}`;
         const tag = document.createElement('p');
@@ -22,6 +23,7 @@
         
         let countFrom = new Date(obj.date).getTime();
         
+        //Countdown code (especially calculations) from W3Schools https://www.w3schools.com/howto/howto_js_countdown.asp
         let countdown = setInterval(() => {
             var curTime = new Date().getTime();
             var length = countFrom - curTime;
@@ -56,7 +58,7 @@
         
         if(obj.message){
             const p = document.createElement('p');
-            p.textContent = `Message: ${obj.message}`;
+            p.textContent = `${obj.message}`;
             status.appendChild(p);
         }
         //When user requested "all reminders"
@@ -72,15 +74,6 @@
                 });
 
         }
-        //Temp Reminders is what the user searched for that's not "all reminders"
-        if(obj.tempReminders){
-            content.innerHTML = "";
-            const keys = Object.keys(obj.tempReminders);
-            
-            Object.entries(obj.tempReminders).forEach(
-                ([key, value]) => makeNotificationBox(value, content)
-            );
-        }
     };
 
     const handleResponse = (xhr, parseResponse) => {
@@ -90,20 +83,27 @@
         switch(xhr.status){
             case 200:
                 //content.innerHTML = `<b>Success</b>`;
-                status.innerHTML = `<b>Success</b>`
+                //status.innerHTML = `<b>Success</b>`
+                status.style.background = 'green';
                 break;
             case 201: 
-                //content.innerHTML = `<b>Create</b>`;
-                status.innerHTML = `<b>Create</b>`;
+                //status.innerHTML = `<b>Reminder Created</b>`;
+                status.style.background = 'green';
                 break;
             case 204: 
-                //content.innerHTML = `<b>Updated (No Content)</b>`;
-                status.innerHTML = `<b>Updated (No Content)</b>`;
+                status.style.background = 'green';
+                status.innerHTML = `<b>Reminder Updated</b>`;
+                break;
+            case 230:
+                status.style.background = 'green';
+                status.innerHTML = '<b>Reminder Exists!</b>';
                 break;
             case 400: 
+                status.style.background = 'red';
                 status.innerHTML = `<b>Bad Request</b>`
                 break;
             case 404:
+                status.style.background = 'red';
                 status.innerHTML = `<b>Resource Not Found</b>`;
                 break;
             default:
@@ -205,7 +205,8 @@
 <body>
   <section id="top">
       <div id="statusContainer"><h2 id="status"></h2></div>
-    <h3>Remind Me!</h3>
+      
+    <h1 id="title">Remind Me!</h3>
       
     <form id="submitReminderForm" action="/submitReminder" method="post">
       <label for="name">Reminder Name: </label>

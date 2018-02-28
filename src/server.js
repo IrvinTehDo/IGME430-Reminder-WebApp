@@ -34,11 +34,11 @@ const handlePost = (request, response, parsedUrl) => {
   }
 };
 
-const handleGet = (request, response, parsedUrl) => {
+const handleGet = async (request, response, parsedUrl) => {
   if (parsedUrl.pathname === '/style.css') {
     htmlHandler.getCSS(request, response);
   } else if (parsedUrl.pathname.includes('/getAllReminders&') || parsedUrl.pathname.includes('/getByTag&') || (parsedUrl.pathname.includes('/getByName&'))) {
-    jsonHandler.getReminders(request, response, parsedUrl);
+    await jsonHandler.getReminders(request, response, parsedUrl);
   } else if (parsedUrl.pathname === '/' || parsedUrl.pathname === '/client.html' || parsedUrl.pathname === '') {
     htmlHandler.getIndex(request, response);
   } else {

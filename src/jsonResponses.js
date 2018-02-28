@@ -2,33 +2,34 @@ const mysql = require('mysql');
 const config = require('../.credentials.json');
 
 const mysqlConnection = mysql.createConnection({
-  host: config.mysqlHost,
-  user: config.mysqlUser,
-  password: config.mysqlPass,
+  host: process.env.DATABASE_HOST || config.mysqlHost,
+  user: process.env.DATABASE_USER || config.mysqlUser,
+  password: process.env.DATABASE_PASS || config.mysqlPass,
 });
 
 mysqlConnection.connect((err) => {
   if (err) throw err;
   console.log('Connected to mysql database');
 
-  mysqlConnection.query(`CREATE DATABASE IF NOT EXISTS ${config.mysqlSchema}`, (e, result) => {
+  setInterval(() => {
+    mysqlConnection.query('SELECT 1');
+  }, 5000);
+
+  mysqlConnection.query(`CREATE DATABASE IF NOT EXISTS ${process.env.DATABASE_SCHEMA || config.mysqlSchema}`, (e, result) => {
     if (e) throw e;
     console.log(result);
   });
 
-  mysqlConnection.query(`USE ${config.mysqlSchema};`, (e, result) => {
+  mysqlConnection.query(`USE ${process.env.DATABASE_SCHEMA || config.mysqlSchema};`, (e, result) => {
     if (e) throw e;
     console.log(result);
   });
 
-  mysqlConnection.query('CREATE TABLE IF NOT EXISTS reminders (ID int NOT NULL AUTO_INCREMENT, name varchar(255), description varchar(255), time varchar(255), date varchar(255), PRIMARY KEY (ID));', (e, result) => {
+  mysqlConnection.query('CREATE TABLE IF NOT EXISTS reminders (name varchar(255) NOT NULL, description varchar(255), tag varchar(255), date varchar(255), PRIMARY KEY (name));', (e, result) => {
     if (e) throw e;
     console.log(result);
   });
 });
-
-const reminders = {};
-
 
 const respondJSON = (request, response, status, object) => {
   response.writeHead(status, { 'Content-Type': 'application/json' });
@@ -41,7 +42,7 @@ const respondJSONMeta = (request, response, status) => {
   response.end();
 };
 
-const getReminders = (request, response, parsedUrl) => {
+const getReminders = async (request, response, parsedUrl) => {
   const splitUrl = parsedUrl.pathname.split('/')[1].split('&field=');
   console.dir(splitUrl);
 
@@ -50,59 +51,47 @@ const getReminders = (request, response, parsedUrl) => {
     field: splitUrl[1],
   };
   let responseJSON = {};
+  const reminders = {};
 
-  if (params.searchBy === 'getAllReminders') {
-    responseJSON = {
-      reminders,
-    };
-  } else {
-    const keys = Object.keys(reminders);
-    const tempReminders = {};
+  let myQuery = '';
+  if (params.searchBy === 'getAllReminders') myQuery = 'SELECT * FROM reminders';
+  else if (params.searchBy === 'getByTag') myQuery = `SELECT * FROM reminders WHERE tag = '${params.field}'`;
+  else if (params.searchBy === 'getByName') myQuery = `SELECT * FROM reminders WHERE name = '${params.field}'`;
 
-    if (params.searchBy === 'getByTag') {
-      for (let i = 0; i < keys.length; i++) {
-        console.dir(keys[i]); // gets the name of the object
 
-        if (reminders[keys[i]].tag === params.field) {
-          tempReminders[keys[i]] = {};
-          tempReminders[keys[i]].name = reminders[keys[i]].name;
-          tempReminders[keys[i]].description = reminders[keys[i]].description;
-          tempReminders[keys[i]].tag = reminders[keys[i]].tag;
-          tempReminders[keys[i]].date = reminders[keys[i]].date;
-        }
+  try {
+    await mysqlConnection.query(myQuery, (e, result) => {
+      if (e) throw e;
+      for (let i = 0; i < result.length; i++) {
+        reminders[result[i].name] = {};
+        reminders[result[i].name].name = result[i].name;
+        reminders[result[i].name].description = result[i].description;
+        reminders[result[i].name].tag = result[i].tag;
+        reminders[result[i].name].date = result[i].date;
       }
-
       responseJSON = {
-        tempReminders,
+        reminders,
       };
-    } else if (params.searchBy === 'getByName') {
-      for (let i = 0; i < keys.length; i++) {
-        console.dir(keys[i]);
-
-        if (reminders[keys[i]].name === params.field) {
-          tempReminders[keys[i]] = {};
-          tempReminders[keys[i]].name = reminders[keys[i]].name;
-          tempReminders[keys[i]].description = reminders[keys[i]].description;
-          tempReminders[keys[i]].date = reminders[keys[i]].date;
-        }
-      }
-
-      responseJSON = {
-        tempReminders,
-      };
-    }
+      respondJSON(request, response, 200, responseJSON);
+    });
+  } catch (error) {
+    console.dir(error);
   }
-
-  console.dir(responseJSON);
-  respondJSON(request, response, 200, responseJSON);
 };
 
-const checkReminders = (request, response, searchObj) => {
-  if (reminders[searchObj].name === searchObj) {
-    return respondJSONMeta(request, response, 200);
+const checkReminders = async (request, response, searchObj) => {
+  try {
+    await mysqlConnection.query(`SELECT name FROM reminders WHERE name = '${searchObj}'`, (e, result) => {
+      if (result[0]) {
+        if (searchObj === result[0].name) {
+          return respondJSONMeta(request, response, 230);
+        }
+      }
+      return respondJSONMeta(request, response, 404);
+    });
+  } catch (error) {
+    console.dir(error);
   }
-
-  return respondJSONMeta(request, response, 404);
 };
 
 const getRemindersMeta = (request, response) => respondJSONMeta(request, response, 200);
@@ -118,31 +107,39 @@ const notFound = (request, response) => {
   return respondJSON(request, response, 404, responseJSON);
 };
 
-const addReminder = (request, response, body) => {
-  const responseJSON = {
-    message: 'Name, Description, Tag, and Date are all required.',
-  };
-  if (!body.name || !body.description || !body.tag || !body.date) {
-    responseJSON.id = 'missingParams';
-    return respondJSON(request, response, 400, responseJSON);
-  }
-  let responseCode = 201;
+const addReminder = async (request, response, body) => {
+  try {
+    const responseJSON = {
+      message: 'Name, Description, Tag, and Date are all required.',
+    };
+    if (!body.name || !body.description || !body.tag || !body.date) {
+      responseJSON.id = 'missingParams';
+      return respondJSON(request, response, 400, responseJSON);
+    }
+    let responseCode = 201;
+    await mysqlConnection.query(`SELECT name FROM reminders WHERE name = '${body.name}'`, (e, result) => {
+      if (result[0]) {
+        if (body.name === result[0].name) {
+          console.log(`name updated:${result[0].name}`);
+          responseCode = 204;
+        }
+      }
+    });
 
-  if (reminders[body.name]) {
-    responseCode = 204;
-  } else {
-    reminders[body.name] = {};
-  }
-  reminders[body.name].name = body.name;
-  reminders[body.name].description = body.description;
-  reminders[body.name].tag = body.tag;
-  reminders[body.name].date = body.date;
+    await mysqlConnection.query(`INSERT INTO reminders (name, description, tag, date) VALUES ('${body.name}', '${body.description}', '${body.tag}', '${body.date}') ON DUPLICATE KEY UPDATE description = '${body.description}', tag = '${body.tag}', date = '${body.date}';`, (e, result) => {
+      if (e) throw e;
+      console.log(result);
 
-  if (responseCode === 201) {
-    responseJSON.message = 'Created Successfully';
-    return respondJSON(request, response, responseCode, responseJSON);
+      if (responseCode === 201) {
+        responseJSON.message = 'Reminder Created Successfully';
+        return respondJSON(request, response, responseCode, responseJSON);
+      }
+      return respondJSONMeta(request, response, responseCode);
+    });
+  } catch (error) {
+    console.dir(error);
   }
-  return respondJSONMeta(request, response, responseCode);
+  return null;
 };
 
 // public exports
