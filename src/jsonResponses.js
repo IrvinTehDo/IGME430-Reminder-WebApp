@@ -8,7 +8,8 @@ const mysqlConnection = mysql.createConnection({
   password: process.env.DATABASE_PASS || config.mysqlPass,
 });
 
-// Setup our database if it somehow gets wiped, and make sure we're in the right database and ready to use it.
+// Setup our database if it somehow gets wiped,
+// and make sure we're in the right database and ready to use it.
 mysqlConnection.connect((err) => {
   if (err) throw err;
   console.log('Connected to mysql database');
